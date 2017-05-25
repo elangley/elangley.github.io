@@ -30,11 +30,11 @@ import Data.Set</code></pre></section>
 <pre class="code"><code class="haskell" id="Syntax">data Syntax = Var Char | Abs Char Syntax | Ap Syntax Syntax
   deriving (Show,Eq,Ord)</code></pre></section>
 
-<code><u><a href="#Syntax">Syntax</a></u></code>: this type represents an arbitrary program in Lambda
+<p><code><u><a href="#Syntax">Syntax</a></u></code>: this type represents an arbitrary program in Lambda
 Calculus. <code>Var</code> represents a leaf of the AST, a variable that may
 either be bound or unbound. <code>Abs</code> represents one-argument function
 definition. <code>Ap</code> represents the application of a function to some
-arbitrary program.
+arbitrary program.</p>
 
 <section><h3>Some functions for extracting interesting facts from a program:</h3>
 
@@ -111,7 +111,8 @@ yComb = Abs 'f' (Ap (Abs 'x' (Ap (Var 'f') (Ap (Var 'x') (Var 'x'))))
                     (Abs 'x' (Ap (Var 'f') (Ap (Var 'x') (Var 'x')))))</code>
 <code class="haskell" id="succ">succ'  = Abs 'n' $ Abs 'f' $ Abs 'x' $ Ap (Var 'f') (Ap (Var 'n') (Ap (Var 'f') (Var 'x')))
 succ'' = Abs 'm' $ Abs 'g' $ Abs 'c' $ Ap (Var 'g') (Ap (Var 'm') (Ap (Var 'g') (Var 'c')))</code></pre></section>
-</section></root>
+</section>
+</root>
     </article>
     <script>hljs.initHighlightingOnLoad();</script>
   </body>

@@ -26,11 +26,13 @@ data Syntax = Var Char | Abs Char Syntax | Ap Syntax Syntax
   deriving (Show,Eq,Ord)
 }}}
 
+◊p{
 ◊term{Syntax}: this type represents an arbitrary program in Lambda
 Calculus. ◊code{Var} represents a leaf of the AST, a variable that may
 either be bound or unbound. ◊code{Abs} represents one-argument function
 definition. ◊code{Ap} represents the application of a function to some
 arbitrary program.
+}
 
 ◊section{
 ◊h3{Some functions for extracting interesting facts from a program:}
