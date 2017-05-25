@@ -1,6 +1,118 @@
-<html><head><meta charset="UTF-8"/></head><body><root><h1>This is a heading</h1>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"/>
+    <title>Lambda Calculus in Haskell</title>
+    <script src="assets/highlight.pack.js"></script>
+    <link href="assets/tufte.css" rel="stylesheet"/>
+    <link href="assets/style.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="assets/zenburn.css">
+  </head>
+  <body>
+    <article>
+      <nav id="pagewise">
+        <div id="prev-page">← <a href="index.html">Table Of Contents</a></div>
+        <div id="next-page"><a href="test2.html">bar</a> →</div>
+      </nav>
+      <root><section><h2>Lambda Calculus in Haskell</h2>
 
-This is some text
+<section><h3>Some boilerplate:</h3>
 
+<pre class="code"><code class="haskell">{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds #-}
+module Main where
 
-</root></body></html>
+import Prelude hiding (map)
+import Data.Set</code></pre></section>
+
+<section><h3>Our Representation of the Lambda Calculus:</h3>
+
+<pre class="code"><code class="haskell" id="Syntax">data Syntax = Var Char | Abs Char Syntax | Ap Syntax Syntax
+  deriving (Show,Eq,Ord)</code></pre></section>
+
+<code><u><a href="#Syntax">Syntax</a></u></code>: this type represents an arbitrary program in Lambda
+Calculus. <code>Var</code> represents a leaf of the AST, a variable that may
+either be bound or unbound. <code>Abs</code> represents one-argument function
+definition. <code>Ap</code> represents the application of a function to some
+arbitrary program.
+
+<section><h3>Some functions for extracting interesting facts from a program:</h3>
+
+<p><code><u><a href="#sLength">sLength</a></u></code>: function, determines the length of an expression.</p>
+
+<p><code><u><a href="#freeVars">freeVars</a></u></code>: get the set of free variables in an expression.</p>
+
+<p><code><u><a href="#boundVars">boundVars</a></u></code>: get the set of bound variables in an expression.</p>
+
+<p><code><u><a href="#sub">sub</a></u></code>: what does this do?</p>
+
+<pre class="code"><code class="haskell" id="sLength">sLength :: Syntax -&gt; Integer
+sLength (Var x) = 1
+sLength (Ap a b) = sLength a + sLength b + 1
+sLength (Abs _ s) = sLength s + 1</code>
+
+<code class="haskell" id="freeVars">freeVars :: Set Char -&gt; Syntax -&gt; Set Char
+freeVars vars (Var char) = insert char vars
+freeVars vars (Ap exp arg) = union (union (freeVars vars exp) (freeVars vars arg)) vars
+freeVars vars (Abs arg body) = union vars (delete arg $ freeVars vars body)</code>
+
+<code class="haskell" id="boundVars">boundVars vars (Var x) = vars
+boundVars vars (Ap a b) = union (boundVars vars a) (boundVars vars b)
+boundVars vars (Abs a s) = insert a (boundVars vars s)</code>
+
+<code class="haskell" id="sub">sub terms t@(Var _) = fromList [t]
+sub terms t@(Abs x body) = sub (insert t terms) body
+sub terms t@(Ap l r) = insert t $ union (sub terms l) (sub terms r)</code></pre></section>
+
+<section><h3>Functions for generically finding the occurence of a variable:</h3>
+
+<p>The <code><u><a href="#PathTok">PathTok</a></u></code> datatype represents one step in the process of
+descending down a program until you reach a specified variable.
+<code><u><a href="#[PathTok]">[PathTok]</a></u></code> represents the path to one specific variable.</p>
+
+<p>The <code><u><a href="#path">path</a></u></code> function takes a Syntax element and constructs a set of all
+the possible paths in a given expression contains.</p>
+
+<p>The <code><u><a href="#occ">occ</a></u></code> function takes an expression and a path and either returns the
+variable specified by the path, if such exists.</p>
+
+<pre class="code"><code class="haskell" id="PathTok">data PathTok = R | L | Star
+  deriving (Ord,Show,Eq)</code>
+<code class="haskell" id="path">path :: Syntax -&gt; Set [PathTok]
+path (Var x) = fromList [[]]
+path (Abs x s) = union (fromList [[]]) (map (\x -&gt; Star:x) $ path s)
+path (Ap t r) = insert [] $
+  union (map (\x -&gt; L:x) $ path t)
+        (map (\x -&gt; R:x) $ path r)</code>
+<code class="haskell" id="occ">occ :: Syntax -&gt; [PathTok] -&gt; Maybe Syntax
+occ (Var t) [] = Just t
+occ (Ap t r) (L:tail) = occ t tail &gt;&gt;= Just
+occ (Ap t r) (R:tail) = occ r tail &gt;&gt;= Just
+occ (Abs x s) (Star:tail) = occ s tail &gt;&gt;= Just
+occ _ _ = Nothing
+
+expand :: Char -&gt; Syntax -&gt; Syntax -&gt; Syntax
+expand var val (Ap exp arg) = Ap (expand var val exp) (expand var val arg)
+expand var val (Abs arg body) | var /= arg = Abs arg (expand var val body)
+expand var val (Abs arg body) | var == arg = undefined
+expand var val (Var body) | var == body = val
+expand var val body = body</code></pre></section>
+
+<section><h3>Beta Reduction (incomplete):</h3>
+
+<pre class="code"><code class="haskell">betaReduce :: Syntax -&gt; Syntax
+betaReduce (Ap (Abs var body) val) = expand var val body
+betaReduce x = x</code></pre></section>
+
+<section><h3>A couple (very useful) programs expressed in our Lambda Calculus:</h3>
+
+<pre class="code"><code class="haskell" id="yComb"><a name="foo">yComb</a> :: Syntax
+yComb = Abs 'f' (Ap (Abs 'x' (Ap (Var 'f') (Ap (Var 'x') (Var 'x'))))
+                    (Abs 'x' (Ap (Var 'f') (Ap (Var 'x') (Var 'x')))))</code>
+<code class="haskell" id="succ">succ'  = Abs 'n' $ Abs 'f' $ Abs 'x' $ Ap (Var 'f') (Ap (Var 'n') (Ap (Var 'f') (Var 'x')))
+succ'' = Abs 'm' $ Abs 'g' $ Abs 'c' $ Ap (Var 'g') (Ap (Var 'm') (Ap (Var 'g') (Var 'c')))</code></pre></section>
+</section></root>
+    </article>
+    <script>hljs.initHighlightingOnLoad();</script>
+  </body>
+</html>
