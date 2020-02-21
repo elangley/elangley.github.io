@@ -1,6 +1,5 @@
 #lang pollen
 
 index.html
-test1.html
-test2.html
-test3.html
+lambda_calc_haskell.html
+stub_multis_clojure.html
